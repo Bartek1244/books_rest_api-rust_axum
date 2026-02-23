@@ -28,9 +28,9 @@ where
             for (field, field_errors) in e.field_errors() {
                 for field_error in field_errors {
                     if let Some(msg) = &field_error.message {
-                        errors.push(format!("{} {}", field, msg));
+                        errors.push(format!("field {} {}", field, msg));
                     } else {
-                        errors.push(format!("{} is invalid", field));
+                        errors.push(format!("field {} is invalid", field));
                     }
                 }
             }
