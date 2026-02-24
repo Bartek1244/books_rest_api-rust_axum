@@ -19,7 +19,7 @@ async fn get_books(
     State(state): State<AppState>
 ) -> Result<Json<Vec<Book>>, AppError> {
     let books = state
-        .db_repo
+        .book_service
         .get_all_books()
         .await?;
 
@@ -31,10 +31,9 @@ async fn get_book_by_id(
     Path(id): Path<i32>
 ) -> Result<Json<Book>, AppError> {
     let book = state
-        .db_repo
+        .book_service
         .get_book_by_id(id)
-        .await?
-        .ok_or(AppError::NotFound)?;
+        .await?;
 
     Ok(Json(book))
 }
@@ -44,8 +43,8 @@ async fn create_book(
     ValidatedJson(payload): ValidatedJson<CreateBook>
 ) -> Result<impl IntoResponse, AppError> {
     let created_book = state
-        .db_repo
-        .insert_book(&payload)
+        .book_service
+        .create_book(&payload)
         .await?;
 
     Ok((

@@ -6,17 +6,19 @@ use dotenvy::dotenv;
 use std::{env, net::SocketAddr};
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use crate::{db_repository::DbRepository, json_validation::ValidatedJson, handlers::app_router, model::book_model::Book, model::book_model::CreateBook};
+use std::sync::Arc;
+use crate::{handler::app_router, json_validation::ValidatedJson, model::book_model::{Book, CreateBook}, repository::book_repository::{BookRepository, PostgresBookRepository}, service::book_service::BookService};
 
-mod handlers;
+mod handler;
 mod model;
-mod db_repository;
+mod repository;
+mod service;
 mod error;
 mod json_validation;
 
 #[derive(Clone)]
 pub struct AppState {
-    pub db_repo: DbRepository, 
+    pub book_service: BookService, 
 }
 
 #[tokio::main]
@@ -40,8 +42,9 @@ std::env::var("RUST_LOG")
         .await
         .expect("couldn't establish database pool connection");
     
-    let db_repo = DbRepository::new(pool);
-    let state = AppState { db_repo };
+    let book_repo = Arc::new(PostgresBookRepository::new(pool.clone()));
+    let book_service = BookService::new(book_repo);
+    let state = AppState { book_service };
 
     let app = Router::new()
         .merge(app_router())
