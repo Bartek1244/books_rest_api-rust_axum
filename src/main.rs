@@ -7,7 +7,17 @@ use std::{env, net::SocketAddr};
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use std::sync::Arc;
-use crate::{handler::app_router, json_validation::ValidatedJson, model::book_model::{Book, CreateBook}, repository::book_repository::{BookRepository, PostgresBookRepository}, service::book_service::BookService};
+use crate::{
+    handler::app_router, 
+    json_validation::ValidatedJson, 
+    model::book_model::{Book, CreateBook}, 
+    repository::{
+        author_repository::PostgresAuthorRepository, 
+        book_repository::{BookRepository, PostgresBookRepository},
+        publisher_repository::PostgresPublisherRepository
+    }, 
+    service::{author_service::AuthorService, book_service::BookService, publisher_service::PublisherService}
+};
 
 mod handler;
 mod model;
@@ -19,6 +29,8 @@ mod json_validation;
 #[derive(Clone)]
 pub struct AppState {
     pub book_service: BookService, 
+    pub author_service: AuthorService, 
+    pub publisher_service: PublisherService, 
 }
 
 #[tokio::main]
@@ -43,8 +55,12 @@ std::env::var("RUST_LOG")
         .expect("couldn't establish database pool connection");
     
     let book_repo = Arc::new(PostgresBookRepository::new(pool.clone()));
+    let author_repo = Arc::new(PostgresAuthorRepository::new(pool.clone()));
+    let publisher_repo = Arc::new(PostgresPublisherRepository::new(pool.clone()));
     let book_service = BookService::new(book_repo);
-    let state = AppState { book_service };
+    let author_service = AuthorService::new(author_repo);
+    let publisher_service = PublisherService::new(publisher_repo);
+    let state = AppState { book_service, author_service, publisher_service };
 
     let app = Router::new()
         .merge(app_router())

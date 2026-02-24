@@ -4,18 +4,14 @@ use axum::{
 
 use crate::{AppState, Book, CreateBook, error::AppError, ValidatedJson};
 
-pub fn router() -> Router<AppState> {
+pub fn book_router() -> Router<AppState> {
     Router::new()
-        .route("/", get(root))
-        .route("/books", get(get_books).post(create_book))
-        .route("/books/{id}", get(get_book_by_id))
+        .route("/", get(get_all_books))
+        // .route("/books", get(get_books).post(create_book))
+        // .route("/books/{id}", get(get_book_by_id))
 }
 
-async fn root() -> &'static str {
-    "Hello rust api!"
-}
-
-async fn get_books(
+async fn get_all_books(
     State(state): State<AppState>
 ) -> Result<Json<Vec<Book>>, AppError> {
     let books = state
@@ -26,30 +22,30 @@ async fn get_books(
     Ok(Json(books))
 }
 
-async fn get_book_by_id(
-    State(state): State<AppState>,
-    Path(id): Path<i32>
-) -> Result<Json<Book>, AppError> {
-    let book = state
-        .book_service
-        .get_book_by_id(id)
-        .await?;
+// async fn get_book_by_id(
+//     State(state): State<AppState>,
+//     Path(id): Path<i32>
+// ) -> Result<Json<Book>, AppError> {
+//     let book = state
+//         .book_service
+//         .get_book_by_id(id)
+//         .await?;
 
-    Ok(Json(book))
-}
+//     Ok(Json(book))
+// }
 
-async fn create_book(
-    State(state): State<AppState>,
-    ValidatedJson(payload): ValidatedJson<CreateBook>
-) -> Result<impl IntoResponse, AppError> {
-    let created_book = state
-        .book_service
-        .create_book(&payload)
-        .await?;
+// async fn create_book(
+//     State(state): State<AppState>,
+//     ValidatedJson(payload): ValidatedJson<CreateBook>
+// ) -> Result<impl IntoResponse, AppError> {
+//     let created_book = state
+//         .book_service
+//         .create_book(&payload)
+//         .await?;
 
-    Ok((
-        StatusCode::CREATED, 
-        [((header::LOCATION), format!("/books/{}", created_book.id))],
-        Json(created_book)
-    ))
-}
+//     Ok((
+//         StatusCode::CREATED, 
+//         [((header::LOCATION), format!("/books/{}", created_book.id))],
+//         Json(created_book)
+//     ))
+// }
